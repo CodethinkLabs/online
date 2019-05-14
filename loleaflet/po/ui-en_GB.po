@@ -1030,7 +1030,12 @@ msgstr "Modify"
 
 #: src/layer/tile/TileLayer.js:194
 msgid "Remove"
-msgstr "Remove"
+msgstr "Removeify"
+
+#: src/layer/tile/TileLayer.js:?
+msgid "Resolve"
+msgstr "Resolve"
+
 
 #: src/map/Map.js:122
 msgid "Initializing..."

@@ -23,6 +23,7 @@ L.AnnotationManager = L.Class.extend({
 		this._map.on('AnnotationCancel', this._onAnnotationCancel, this);
 		this._map.on('AnnotationClick', this._onAnnotationClick, this);
 		this._map.on('AnnotationReply', this._onAnnotationReply, this);
+		this._map.on('AnnotationResolve', this._onAnnotationResolve, this);
 		this._map.on('AnnotationSave', this._onAnnotationSave, this);
 		this._map.on('RedlineAccept', this._onRedlineAccept, this);
 		this._map.on('RedlineReject', this._onRedlineReject, this);
@@ -718,6 +719,22 @@ L.AnnotationManager = L.Class.extend({
 			}
 		};
 		this._map.sendUnoCommand('.uno:ReplyComment', comment);
+		this.unselect();
+		this._map.focus();
+	},
+
+	_onAnnotationResolve: function (e) {
+		var comment = {
+			Id: {
+				type: 'string',
+				value: e.annotation._data.id
+			},
+			Text: {
+				type: 'string',
+				value: e.annotation._data.reply
+			}
+		};
+		this._map.sendUnoCommand('.uno:ResolveComment', comment);
 		this.unselect();
 		this._map.focus();
 	},
