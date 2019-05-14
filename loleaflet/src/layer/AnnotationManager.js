@@ -563,6 +563,18 @@ L.AnnotationManager = L.Class.extend({
 		annotation.focus();
 	},
 
+	resolve: function (id) {
+		var comment = {
+			Id: {
+				type: 'string',
+				value: id
+			}
+		};
+		this._map.sendUnoCommand('.uno:ResolveComment', comment);
+		this.unselect();
+		this._map.focus();
+	},
+
 	remove: function (id) {
 		var comment = {
 			Id: {
