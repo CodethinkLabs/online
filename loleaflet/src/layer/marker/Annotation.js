@@ -190,6 +190,11 @@ L.Annotation = L.Layer.extend({
 		}
 		this._author = L.DomUtil.create('table', 'loleaflet-annotation-table', wrapper);
 		var tbody = L.DomUtil.create('tbody', empty, this._author);
+		var resolvedrow = L.DomUtil.create('tr', empty, tbody);
+		var tdResolved = L.DomUtil.create(tagTd, 'loleaflet-annotation-resolved', resolvedrow);
+		this._resolved = L.DomUtil.create('p', 'resolved-field', tdResolved);
+		$(this._resolved).text(this._data.resolved);
+
 		var tr = L.DomUtil.create('tr', empty, tbody);
 		var tdImg = L.DomUtil.create(tagTd, 'loleaflet-annotation-img', tr);
 		var tdAuthor = L.DomUtil.create(tagTd, 'loleaflet-annotation-author', tr);
@@ -357,6 +362,7 @@ L.Annotation = L.Layer.extend({
 		this._contentText.origText = this._data.text;
 		$(this._nodeModifyText).text(this._data.text);
 		$(this._contentAuthor).text(this._data.author);
+		$(this._resolved).text(this._data.resolved);
 		$(this._authorAvatarImg).attr('src', this._data.avatar);
 		var user = this._map.getViewId(this._data.author);
 		if (user >= 0) {
