@@ -563,16 +563,18 @@ L.AnnotationManager = L.Class.extend({
 		annotation.focus();
 	},
 
-	resolve: function (id) {
+	resolve: function (annotation) {
+		// This is called by WriteTileLayer
+		console.log('Sending Uno command to resolve comment with ID '+annotation._data.id);
 		var comment = {
 			Id: {
 				type: 'string',
-				value: id
+				value: annotation._data.id
 			}
 		};
 		this._map.sendUnoCommand('.uno:ResolveComment', comment);
-		this.unselect();
-		this._map.focus();
+		annotation.update();
+		this.update();
 	},
 
 	remove: function (id) {

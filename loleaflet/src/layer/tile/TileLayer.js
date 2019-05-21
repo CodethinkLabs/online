@@ -214,7 +214,7 @@ L.TileLayer = L.GridLayer.extend({
 				resolve: {
 					name: _('Resolve'),
 					callback: function (key, options) {
-						that.onAnnotationResolve.call(that, options.$trigger.get(0).annotation._data.id);
+						that.onAnnotationResolve.call(that, options.$trigger.get(0).annotation);
 					}
 				}
 

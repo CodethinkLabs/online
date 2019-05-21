@@ -45,8 +45,9 @@ L.WriterTileLayer = L.TileLayer.extend({
 		this._annotations.reply(annotation);
 	},
 
-	onAnnotationResolve: function (id) {
-		this._annotations.resolve(id);
+	onAnnotationResolve: function (annotation) {
+		console.log('onAnnotationResolve clicked from context menu');
+		this._annotations.resolve(annotation);
 	},
 
 	onChangeAccept: function(id) {
