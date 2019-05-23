@@ -219,6 +219,7 @@ var unoCommandsArray = {
 	Show:{spreadsheet:{menu:_('~Show Sheet...'),},},
 	ShowColumn:{spreadsheet:{context:_('S~how Columns'),menu:_('~Show'),},},
 	ShowDetail:{global:{menu:_('~Show Details'),},},
+	ShowResolvedAnnotations:{global:{menu:_('Resolved Comments'),},},
 	ShowRow:{spreadsheet:{context:_('Sho~w Rows'),menu:_('~Show'),},},
 	ShowTrackedChanges:{text:{menu:_('~Show'),},},
 	Shrink:{global:{menu:_('Decrease Size'),},},

@@ -23,7 +23,7 @@ L.AnnotationManager = L.Class.extend({
 		this._map.on('AnnotationCancel', this._onAnnotationCancel, this);
 		this._map.on('AnnotationClick', this._onAnnotationClick, this);
 		this._map.on('AnnotationReply', this._onAnnotationReply, this);
-		this._map.on('AnnotationResolve', this._onAnnotationResolve, this);
+		//this._map.on('AnnotationResolve', this._onAnnotationResolve, this);
 		this._map.on('AnnotationSave', this._onAnnotationSave, this);
 		this._map.on('RedlineAccept', this._onRedlineAccept, this);
 		this._map.on('RedlineReject', this._onRedlineReject, this);

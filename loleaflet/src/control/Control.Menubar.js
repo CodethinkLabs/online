@@ -64,7 +64,8 @@ L.Control.Menubar = L.Control.extend({
 				{type: 'separator'},
 				{uno: '.uno:ControlCodes'},
 				{type: 'separator'},
-				{uno: '.uno:Sidebar'}
+				{uno: '.uno:Sidebar'},
+				{uno: '.uno:ShowResolvedAnnotations'}
 			]
 			},
 			{name: _UNO('.uno:InsertMenu', 'text'), type: 'menu', menu: [
