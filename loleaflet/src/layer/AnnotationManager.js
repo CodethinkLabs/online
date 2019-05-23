@@ -372,13 +372,18 @@ L.AnnotationManager = L.Class.extend({
 
 		idx = 0;
 		for (idx = 0; idx < commentThread.length; ++idx) {
-			latLng = this._map.layerPointToLatLng(pt);
-			(new L.PosAnimation()).run(commentThread[idx]._container, this._map.latLngToLayerPoint(latLng));
-			commentThread[idx].setLatLng(latLng, /*skip check bounds*/ true);
-			commentThread[idx].show();
+			console.log('Comment ' + idx + ' / ' + commentThread.length + ' has resolved: '+commentThread[idx]._data.resolved);
+			if (commentThread[idx]._data.resolved == 'true') {
+				console.log('Comment ' + idx + ' / ' + commentThread.length + ' is resolved, skipping');
+			} else {
+				latLng = this._map.layerPointToLatLng(pt);
+				(new L.PosAnimation()).run(commentThread[idx]._container, this._map.latLngToLayerPoint(latLng));
+				commentThread[idx].setLatLng(latLng, /*skip check bounds*/ true);
+				commentThread[idx].show();
 
-			var commentBounds = commentThread[idx].getBounds();
-			pt = pt.add([0, commentBounds.getSize().y]);
+				var commentBounds = commentThread[idx].getBounds();
+				pt = pt.add([0, commentBounds.getSize().y]);
+			}
 		}
 	},
 
@@ -464,13 +469,15 @@ L.AnnotationManager = L.Class.extend({
 			for (idx = selectIndexFirst - 1; idx >= 0;) {
 				var commentThread = [];
 				var tmpIdx = idx;
-				do {
-					if (zoom) {
-						this._items[idx]._data.anchorPix = this._map._docLayer._twipsToPixels(this._items[idx]._data.anchorPos.min);
-					}
-					commentThread.push(this._items[tmpIdx]);
-					tmpIdx = tmpIdx - 1;
-				} while (tmpIdx >= 0 && this._items[tmpIdx]._data.id === this._items[tmpIdx + 1]._data.parent);
+				if (this._items[idx].resolved != 'true') {
+					do {
+						if (zoom) {
+							this._items[idx]._data.anchorPix = this._map._docLayer._twipsToPixels(this._items[idx]._data.anchorPos.min);
+						}
+						commentThread.push(this._items[tmpIdx]);
+						tmpIdx = tmpIdx - 1;
+					} while (tmpIdx >= 0 && this._items[tmpIdx]._data.id === this._items[tmpIdx + 1]._data.parent);
+				}
 
 				commentThread.reverse();
 				// All will have some anchor position
@@ -480,13 +487,15 @@ L.AnnotationManager = L.Class.extend({
 			for (idx = selectIndexLast + 1; idx < this._items.length;) {
 				commentThread = [];
 				tmpIdx = idx;
-				do {
-					if (zoom) {
-						this._items[idx]._data.anchorPix = this._map._docLayer._twipsToPixels(this._items[idx]._data.anchorPos.min);
-					}
-					commentThread.push(this._items[tmpIdx]);
-					tmpIdx = tmpIdx + 1;
-				} while (tmpIdx < this._items.length && this._items[tmpIdx]._data.parent === this._items[tmpIdx - 1]._data.id);
+				if (this._items[idx].resolved != 'true') {
+					do {
+						if (zoom) {
+							this._items[idx]._data.anchorPix = this._map._docLayer._twipsToPixels(this._items[idx]._data.anchorPos.min);
+						}
+						commentThread.push(this._items[tmpIdx]);
+						tmpIdx = tmpIdx + 1;
+					} while (tmpIdx < this._items.length && this._items[tmpIdx]._data.parent === this._items[tmpIdx - 1]._data.id);
+				}
 
 				// All will have some anchor position
 				this.layoutDown(commentThread, this._map.unproject(L.point(topRight.x, commentThread[0]._data.anchorPix.y)), layoutBounds);
@@ -501,13 +510,15 @@ L.AnnotationManager = L.Class.extend({
 			for (idx = 0; idx < this._items.length;) {
 				commentThread = [];
 				tmpIdx = idx;
-				do {
-					if (zoom) {
-						this._items[tmpIdx]._data.anchorPix = this._map._docLayer._twipsToPixels(this._items[tmpIdx]._data.anchorPos.min);
-					}
-					commentThread.push(this._items[tmpIdx]);
-					tmpIdx = tmpIdx + 1;
-				} while (tmpIdx < this._items.length && this._items[tmpIdx]._data.parent === this._items[tmpIdx - 1]._data.id);
+				if (this._items[idx].resolved != 'true') {
+					do {
+						if (zoom) {
+							this._items[tmpIdx]._data.anchorPix = this._map._docLayer._twipsToPixels(this._items[tmpIdx]._data.anchorPos.min);
+						}
+						commentThread.push(this._items[tmpIdx]);
+						tmpIdx = tmpIdx + 1;
+					} while (tmpIdx < this._items.length && this._items[tmpIdx]._data.parent === this._items[tmpIdx - 1]._data.id);
+				}
 
 				this.layoutDown(commentThread, this._map.unproject(L.point(topRight.x, commentThread[0]._data.anchorPix.y)), layoutBounds);
 				idx = idx + commentThread.length;
@@ -572,8 +583,17 @@ L.AnnotationManager = L.Class.extend({
 				value: annotation._data.id
 			}
 		};
+
+		var oldStatus = annotation._data.resolved;
+
 		this._map.sendUnoCommand('.uno:ResolveComment', comment);
 		annotation.update();
+		if (oldStatus == 'true') {
+			annotation.show();
+		} else {
+			annotation.hide();
+		}
+		this.layout();
 		this.update();
 	},
 

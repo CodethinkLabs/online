@@ -101,7 +101,7 @@ L.Annotation = L.Layer.extend({
 	},
 
 	isVisible: function () {
-		return (this._container.style && this._container.style.visibility === '');
+		return (this._container.style && this._container.style.visibility === '' && this._data.resolved!='true');
 	},
 
 	edit: function () {
