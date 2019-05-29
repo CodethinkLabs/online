@@ -332,13 +332,19 @@ L.AnnotationManager = L.Class.extend({
 
 		idx = 0;
 		for (idx = 0; idx < commentThread.length; ++idx) {
-			latLng = this._map.layerPointToLatLng(pt);
-			(new L.PosAnimation()).run(commentThread[idx]._container, this._map.latLngToLayerPoint(latLng));
-			commentThread[idx].setLatLng(latLng, /*skip check bounds*/ true);
-			commentThread[idx].show();
 
-			var commentBounds = commentThread[idx].getBounds();
-			pt = pt.add([0, commentBounds.getSize().y]);
+			if (commentThread[idx]._data.resolved == 'true') {
+				console.log('Comment ' + idx + ' / ' + commentThread.length + ' is resolved, skipping');
+			} else {
+
+				latLng = this._map.layerPointToLatLng(pt);
+				(new L.PosAnimation()).run(commentThread[idx]._container, this._map.latLngToLayerPoint(latLng));
+				commentThread[idx].setLatLng(latLng, /*skip check bounds*/ true);
+				commentThread[idx].show();
+
+				var commentBounds = commentThread[idx].getBounds();
+				pt = pt.add([0, commentBounds.getSize().y]);
+			}
 		}
 	},
 
@@ -392,7 +398,8 @@ L.AnnotationManager = L.Class.extend({
 		var docRight = this._map.project(this._map.options.docBounds.getNorthEast());
 		var topRight = docRight.add(L.point(this.options.marginX, this.options.marginY));
 		var latlng, layoutBounds, point, idx;
-		if (this._selected) {
+		console.log('doLayout at '+this.options.marginX+','+this.options.marginY);
+		if (this._selected && this._selected.resolved != 'true') {
 			var selectIndexFirst = this.getRootIndexOf(this._selected._data.id);
 			var selectIndexLast = this.getLastChildIndexOf(this._selected._data.id);
 			if (zoom) {
@@ -438,7 +445,7 @@ L.AnnotationManager = L.Class.extend({
 						point.y += lineHeight;
 					}
 				}
-			}
+			} // If mobile
 
 			// Draw arrow
 			this._arrow.setLatLngs([this._map.unproject(point), this._map.unproject(L.point(posX, posY))]);
@@ -451,15 +458,20 @@ L.AnnotationManager = L.Class.extend({
 
 			// Adjust child comments too, if any
 			for (idx = selectIndexFirst + 1; idx <= selectIndexLast; idx++) {
-				if (zoom) {
-					this._items[idx]._data.anchorPix = this._map._docLayer._twipsToPixels(this._items[idx]._data.anchorPos.min);
+				console.log('Selected comments layout: current bottom left is '+layoutBounds.getBottomLeft()+' resolved is '+this._items[idx]._data.resolved);
+				if (this._items[idx]._data.resolved == 'true') {
+					console.log('Selected layout: Skipping comment '+this._items[idx]._data._contentText+' because it is resolved');
+				} else {
+					console.log('Selected layout: Adding comment '+this._items[idx]._data._contentText+' because it is not resolved');
+					if (zoom) {
+						this._items[idx]._data.anchorPix = this._map._docLayer._twipsToPixels(this._items[idx]._data.anchorPos.min);
+					}
+					latlng = this._map.layerPointToLatLng(layoutBounds.getBottomLeft());
+					(new L.PosAnimation()).run(this._items[idx]._container, layoutBounds.getBottomLeft());
+					this._items[idx].setLatLng(latlng, /*skip check bounds*/ true);
+					var commentBounds = this._items[idx].getBounds();
+					layoutBounds.extend(layoutBounds.max.add([0, commentBounds.getSize().y]));
 				}
-				latlng = this._map.layerPointToLatLng(layoutBounds.getBottomLeft());
-				(new L.PosAnimation()).run(this._items[idx]._container, layoutBounds.getBottomLeft());
-				this._items[idx].setLatLng(latlng, /*skip check bounds*/ true);
-
-				var commentBounds = this._items[idx].getBounds();
-				layoutBounds.extend(layoutBounds.max.add([0, commentBounds.getSize().y]));
 			}
 
 			layoutBounds.min = layoutBounds.min.add([this.options.marginX, 0]);
@@ -469,7 +481,7 @@ L.AnnotationManager = L.Class.extend({
 			for (idx = selectIndexFirst - 1; idx >= 0;) {
 				var commentThread = [];
 				var tmpIdx = idx;
-				if (this._items[idx].resolved != 'true') {
+				if (this._items[idx]._data.resolved != 'true') {
 					do {
 						if (zoom) {
 							this._items[idx]._data.anchorPix = this._map._docLayer._twipsToPixels(this._items[idx]._data.anchorPos.min);
@@ -487,7 +499,7 @@ L.AnnotationManager = L.Class.extend({
 			for (idx = selectIndexLast + 1; idx < this._items.length;) {
 				commentThread = [];
 				tmpIdx = idx;
-				if (this._items[idx].resolved != 'true') {
+				if (this._items[idx]._data.resolved != 'true') {
 					do {
 						if (zoom) {
 							this._items[idx]._data.anchorPix = this._map._docLayer._twipsToPixels(this._items[idx]._data.anchorPos.min);
@@ -504,23 +516,25 @@ L.AnnotationManager = L.Class.extend({
 			if (!this._selected.isEdit()) {
 				this._selected.show();
 			}
-		} else if (this._items.length > 0) {
+		} else if (this._items.length > 0) { // If nothing is selected, but there are comments:
 			point = this._map.latLngToLayerPoint(this._map.unproject(L.point(topRight.x, this._items[0]._data.anchorPix.y)));
 			layoutBounds = L.bounds(point, point);
+			// Pass over all comments present
 			for (idx = 0; idx < this._items.length;) {
 				commentThread = [];
 				tmpIdx = idx;
-				if (this._items[idx].resolved != 'true') {
-					do {
-						if (zoom) {
-							this._items[tmpIdx]._data.anchorPix = this._map._docLayer._twipsToPixels(this._items[tmpIdx]._data.anchorPos.min);
-						}
-						commentThread.push(this._items[tmpIdx]);
-						tmpIdx = tmpIdx + 1;
-					} while (tmpIdx < this._items.length && this._items[tmpIdx]._data.parent === this._items[tmpIdx - 1]._data.id);
-				}
+				do {
+					if (zoom) {
+						this._items[tmpIdx]._data.anchorPix = this._map._docLayer._twipsToPixels(this._items[tmpIdx]._data.anchorPos.min);
+					}
+					// Add this item to the list of comments.
+					commentThread.push(this._items[tmpIdx]);
+					tmpIdx = tmpIdx + 1;
+					// Continue this loop, until we reach the last item, or an item which is not a direct descendant of the previous item.
+				} while (tmpIdx < this._items.length && this._items[tmpIdx]._data.parent === this._items[tmpIdx - 1]._data.id);
 
 				this.layoutDown(commentThread, this._map.unproject(L.point(topRight.x, commentThread[0]._data.anchorPix.y)), layoutBounds);
+
 				idx = idx + commentThread.length;
 			}
 		}
