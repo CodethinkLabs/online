@@ -757,6 +757,7 @@ L.Control.Menubar = L.Control.extend({
 			var on = $(item).hasClass('lo-menu-item-checked');
 			this._map.sendUnoCommand(unoCommand);
 			console.log('showresolved click: sent uno command '+unoCommand);
+			this._map._docLayer._annotations.setViewResolved(!on);
 			if (on) {
 				$(item).removeClass('lo-menu-item-checked');
 			} else {
