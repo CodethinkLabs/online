@@ -400,8 +400,9 @@ L.AnnotationManager = L.Class.extend({
 		var docRight = this._map.project(this._map.options.docBounds.getNorthEast());
 		var topRight = docRight.add(L.point(this.options.marginX, this.options.marginY));
 		var latlng, layoutBounds, point, idx;
-		console.log('doLayout at '+this.options.marginX+','+this.options.marginY);
+		console.log('doLayout started with topRight='+this.options.marginX+','+this.options.marginY);
 		if (this._selected && (this._selected.resolved != 'true' || this._showResolved)) {
+			console.log('  a visible comment is selcted');
 			var selectIndexFirst = this.getRootIndexOf(this._selected._data.id);
 			var selectIndexLast = this.getLastChildIndexOf(this._selected._data.id);
 			if (zoom) {
@@ -413,6 +414,8 @@ L.AnnotationManager = L.Class.extend({
 			point = this._map._docLayer._twipsToPixels(this._items[selectIndexFirst]._data.anchorPos.min);
 
 			if (L.Browser.mobile) {
+				console.log('  mobile mode is active');
+
 				var mapBoundsPx = this._map.getPixelBounds();
 				var annotationBoundsPx = this._items[selectIndexFirst].getBounds();
 				var annotationSize = annotationBoundsPx.getSize();
@@ -459,12 +462,16 @@ L.AnnotationManager = L.Class.extend({
 			layoutBounds = this._items[selectIndexFirst].getBounds();
 
 			// Adjust child comments too, if any
+			if (selectIndexLast > selectIndexFirst) {
+				console.log('  laying out selected comments from '+(selectIndexFirst+1) + ' to ' +selectIndexLast);
+			}
+
 			for (idx = selectIndexFirst + 1; idx <= selectIndexLast; idx++) {
-				console.log('Selected comments layout: current bottom left is '+layoutBounds.getBottomLeft()+' resolved is '+this._items[idx]._data.resolved);
+				console.log('  selected comments layout: current bottom left is '+layoutBounds.getBottomLeft()+' resolved is '+this._items[idx]._data.resolved);
 				if (this._items[idx]._data.resolved == 'true' && !this._showResolved) {
-					console.log('Selected layout: Skipping comment '+this._items[idx]._data._contentText+' because it is resolved');
+					console.log('  skipping comment '+this._items[idx]._data._contentText+' because it is resolved');
 				} else {
-					console.log('Selected layout: Adding comment '+this._items[idx]._data._contentText+' because it is not resolved');
+					console.log('  adding comment '+this._items[idx]._data._contentText+' because it is not resolved');
 					if (zoom) {
 						this._items[idx]._data.anchorPix = this._map._docLayer._twipsToPixels(this._items[idx]._data.anchorPos.min);
 					}
@@ -480,42 +487,71 @@ L.AnnotationManager = L.Class.extend({
 			layoutBounds.max = layoutBounds.max.add([this.options.marginX, 0]);
 			layoutBounds.extend(layoutBounds.min.subtract([0, this.options.marginY]));
 			layoutBounds.extend(layoutBounds.max.add([0, this.options.marginY]));
+
+			if (selectIndexFirst > 0) {
+				console.log('  layout up of preceding comments from '+(selectIndexFirst-1) + ' down to 0');
+			}
+
 			for (idx = selectIndexFirst - 1; idx >= 0;) {
 				var commentThread = [];
 				var tmpIdx = idx;
-				if (this._items[idx]._data.resolved != 'true' || this._showResolved) {
-					do {
-						if (zoom) {
-							this._items[idx]._data.anchorPix = this._map._docLayer._twipsToPixels(this._items[idx]._data.anchorPos.min);
-						}
+				do {
+					if (zoom) {
+						this._items[idx]._data.anchorPix = this._map._docLayer._twipsToPixels(this._items[idx]._data.anchorPos.min);
+					}
+					if (this._items[tmpIdx]._data.resolved != 'true' || this._showResolved) {
+						console.log('  visible comment '+this._items[tmpIdx]._data.text+'; comment thread is now ' + commentThread.length + ' comments long');
 						commentThread.push(this._items[tmpIdx]);
-						tmpIdx = tmpIdx - 1;
-					} while (tmpIdx >= 0 && this._items[tmpIdx]._data.id === this._items[tmpIdx + 1]._data.parent);
-				}
+					} else {
+						console.log('  invisible comment "'+this._items[tmpIdx]._data.text + '"');
+					}
 
-				commentThread.reverse();
-				// All will have some anchor position
-				this.layoutUp(commentThread, this._map.unproject(L.point(topRight.x, commentThread[0]._data.anchorPix.y)), layoutBounds);
-				idx = idx - commentThread.length;
+					tmpIdx = tmpIdx - 1;
+				} while (tmpIdx >= 0 && this._items[tmpIdx]._data.id === this._items[tmpIdx + 1]._data.parent);
+
+				if (commentThread.length > 0) {
+					commentThread.reverse();
+					// All will have some anchor position
+					this.layoutUp(commentThread, this._map.unproject(L.point(topRight.x, commentThread[0]._data.anchorPix.y)), layoutBounds);
+					idx = idx - commentThread.length;
+				} else {
+					console.log('  no comments in thread, so layoutUp was skipped.');
+					idx = tmpIdx;
+				}
 			}
+
+			if (selectIndexLast < this._items.length) {
+				console.log('  layout down of following comments from '+(selectIndexLast+1) + ' to '+this._items.length);
+			}
+
 			for (idx = selectIndexLast + 1; idx < this._items.length;) {
 				commentThread = [];
 				tmpIdx = idx;
-				if (this._items[idx]._data.resolved != 'true' || this._showResolved) {
-					do {
-						if (zoom) {
-							this._items[idx]._data.anchorPix = this._map._docLayer._twipsToPixels(this._items[idx]._data.anchorPos.min);
-						}
+				do {
+					if (zoom) {
+						this._items[idx]._data.anchorPix = this._map._docLayer._twipsToPixels(this._items[idx]._data.anchorPos.min);
+					}
+					if (this._items[tmpIdx]._data.resolved != 'true' || this._showResolved) {
+
 						commentThread.push(this._items[tmpIdx]);
-						tmpIdx = tmpIdx + 1;
-					} while (tmpIdx < this._items.length && this._items[tmpIdx]._data.parent === this._items[tmpIdx - 1]._data.id);
-				}
+						console.log('  visible comment '+this._items[tmpIdx]._data.text+'; comment thread is now ' + commentThread.length + ' comments long');
+					} else {
+						console.log('  invisible comment, comment thread is now ' + commentThread.length + ' comments long');
+					}
+
+					tmpIdx = tmpIdx + 1;
+				} while (tmpIdx < this._items.length && this._items[tmpIdx]._data.parent === this._items[tmpIdx - 1]._data.id);
+
 
 				// All will have some anchor position
 				if (commentThread.length > 0) {
 					this.layoutDown(commentThread, this._map.unproject(L.point(topRight.x, commentThread[0]._data.anchorPix.y)), layoutBounds);
 					idx = idx + commentThread.length;
+				} else {
+					console.log('  no comments in thread, so layoutDown was skipped.');
+					idx = tmpIdx;
 				}
+
 			}
 			if (!this._selected.isEdit()) {
 				this._selected.show();
@@ -582,6 +618,7 @@ L.AnnotationManager = L.Class.extend({
 	},
 
 	modify: function (annotation) {
+		console.log('AnnotationManager.Modify called');
 		annotation.edit();
 		this.select(annotation);
 		annotation.focus();
@@ -639,6 +676,12 @@ L.AnnotationManager = L.Class.extend({
 		this.unselect();
 		this._map.focus();
 	},
+
+	_onShowResolvedAnnotations: function() {
+		console.log('_onShowResolvedAnnotations');
+	},
+
+
 
 	_onRedlineReject: function(e) {
 		var command = {
@@ -908,12 +951,12 @@ L.AnnotationManager = L.Class.extend({
 		console.log('AnnotationManager: _showResolved is now ' + state);
 		this._showResolved = state;
 
-		if (state == 'false') {
+		if (state == false) {
 			// This leads to screen corruption for some reason
 			for (var idx = 0; idx < this._items.length;idx++) {
 				if (this._items[idx]._data.resolved == 'true') {
+					console.log('Hiding comment item "' + this._items[idx]._data._commentText + '"');
 					this._items[idx].hide();
-					this._map.removeLayer(this.removeItem(this.items[idx]._data.id));
 				}
 				this._items[idx].update();
 			}

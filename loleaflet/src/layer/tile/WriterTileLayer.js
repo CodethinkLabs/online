@@ -65,6 +65,7 @@ L.WriterTileLayer = L.TileLayer.extend({
 		}
 
 		var values = JSON.parse(textMsg.substring(braceIndex));
+		console.log(textMsg.substring(braceIndex));
 		if (!values) {
 			return;
 		}
