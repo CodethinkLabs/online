@@ -500,8 +500,8 @@ L.AnnotationManager = L.Class.extend({
 						this._items[idx]._data.anchorPix = this._map._docLayer._twipsToPixels(this._items[idx]._data.anchorPos.min);
 					}
 					if (this._items[tmpIdx]._data.resolved != 'true' || this._showResolved) {
-						console.log('  visible comment '+this._items[tmpIdx]._data.text+'; comment thread is now ' + commentThread.length + ' comments long');
 						commentThread.push(this._items[tmpIdx]);
+						console.log('  visible comment '+this._items[tmpIdx]._data.text+'; comment thread is now ' + commentThread.length + ' comments long');
 					} else {
 						console.log('  invisible comment "'+this._items[tmpIdx]._data.text + '"');
 					}
@@ -568,7 +568,9 @@ L.AnnotationManager = L.Class.extend({
 						this._items[tmpIdx]._data.anchorPix = this._map._docLayer._twipsToPixels(this._items[tmpIdx]._data.anchorPos.min);
 					}
 					// Add this item to the list of comments.
-					commentThread.push(this._items[tmpIdx]);
+					if (this._items[tmpIdx]._data.resolved != 'true' || this._showResolved) {
+						commentThread.push(this._items[tmpIdx]);
+					}
 					tmpIdx = tmpIdx + 1;
 					// Continue this loop, until we reach the last item, or an item which is not a direct descendant of the previous item.
 				} while (tmpIdx < this._items.length && this._items[tmpIdx]._data.parent === this._items[tmpIdx - 1]._data.id);
@@ -576,6 +578,9 @@ L.AnnotationManager = L.Class.extend({
 				if (commentThread.length > 0) {
 					this.layoutDown(commentThread, this._map.unproject(L.point(topRight.x, commentThread[0]._data.anchorPix.y)), layoutBounds);
 					idx = idx + commentThread.length;
+				} else {
+					console.log('  no comments in thread, so layoutDown was skipped.');
+					idx = tmpIdx;
 				}
 			}
 		}
@@ -951,15 +956,16 @@ L.AnnotationManager = L.Class.extend({
 		console.log('AnnotationManager: _showResolved is now ' + state);
 		this._showResolved = state;
 
-		if (state == false) {
-			// This leads to screen corruption for some reason
-			for (var idx = 0; idx < this._items.length;idx++) {
-				if (this._items[idx]._data.resolved == 'true') {
+		for (var idx = 0; idx < this._items.length;idx++) {
+			if (this._items[idx]._data.resolved == 'true') {
+				if (state==false) {
 					console.log('Hiding comment item "' + this._items[idx]._data._commentText + '"');
 					this._items[idx].hide();
+				} else {
+					this._items[idx].show();
 				}
-				this._items[idx].update();
 			}
+			this._items[idx].update();
 		}
 		this.layout();
 		this.update();
