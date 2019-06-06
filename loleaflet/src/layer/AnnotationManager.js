@@ -644,14 +644,24 @@ L.AnnotationManager = L.Class.extend({
 			}
 		};
 
-		var oldStatus = annotation._data.resolved;
+
+		var threadIndexFirst = this.getRootIndexOf(annotation._data.id);
+		var threadIndexLast = this.getLastChildIndexOf(annotation._data.id);
+
+		// Work out the previous status before sending the Uno command, otherwise we could
+		// have a race.
+		var oldStatus = this._items[threadIndexFirst]._data.resolved;
 
 		this._map.sendUnoCommand('.uno:ResolveComment', comment);
-		annotation.update();
-		if (oldStatus == 'true') {
-			annotation.show();
-		} else {
-			annotation.hide();
+
+		// This manually shows/hides comments, but we need to do this for the entire thread....
+		for (var idx = threadIndexFirst; idx <= threadIndexLast; idx++) {
+			if (oldStatus == 'true') {
+				this._items[idx].show();
+			} else {
+				this._items[idx].hide();
+			}
+			this._items[idx].update();
 		}
 		this.layout();
 		this.update();
