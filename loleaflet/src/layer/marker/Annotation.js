@@ -347,7 +347,6 @@ L.Annotation = L.Layer.extend({
 		// Assigning an empty string to .innerHTML property in some browsers will convert it to 'null'
 		// While in browsers like Chrome and Firefox, a null value is automatically converted to ''
 		// Better to assign '' here instead of null to keep the behavior same for all
-		this.show();
 		this._checkBounds();
 		this._map.fire('AnnotationResolve', {annotation: this});
 	},
