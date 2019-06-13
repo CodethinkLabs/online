@@ -655,16 +655,18 @@ L.AnnotationManager = L.Class.extend({
 		this._map.sendUnoCommand('.uno:ResolveComment', comment);
 
 		// This manually shows/hides comments, but we need to do this for the entire thread....
-		for (var idx = threadIndexFirst; idx <= threadIndexLast; idx++) {
-			if (oldStatus == 'true') {
-				this._items[idx].show();
-			} else {
-				this._items[idx].hide();
+		if (!this._showResolved) {
+			for (var idx = threadIndexFirst; idx <= threadIndexLast; idx++) {
+				if (oldStatus == 'true') {
+					this._items[idx].show();
+				} else {
+					this._items[idx].hide();
+				}
+				this._items[idx].update();
 			}
-			this._items[idx].update();
+			this.layout();
+			this.update();
 		}
-		this.layout();
-		this.update();
 	},
 
 	remove: function (id) {
