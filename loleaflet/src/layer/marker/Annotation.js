@@ -190,10 +190,13 @@ L.Annotation = L.Layer.extend({
 		}
 		this._author = L.DomUtil.create('table', 'loleaflet-annotation-table', wrapper);
 		var tbody = L.DomUtil.create('tbody', empty, this._author);
-		var resolvedrow = L.DomUtil.create('tr', empty, tbody);
-		var tdResolved = L.DomUtil.create(tagTd, 'loleaflet-annotation-resolved', resolvedrow);
-		this._resolved = L.DomUtil.create('p', 'resolved-field', tdResolved);
-		$(this._resolved).text(this._data.resolved);
+		var rowResolved = L.DomUtil.create('tr', empty, tbody);
+		var tdResolved = L.DomUtil.create(tagTd, 'loleaflet-annotation-resolved', rowResolved);
+		var pResolved = L.DomUtil.create('p', 'resolved-field', tdResolved);
+		pResolved.setAttribute('style', 'color:green');
+		this._resolved = pResolved;
+
+		this._updateResolvedField(this._data.resolved);
 
 		var tr = L.DomUtil.create('tr', empty, tbody);
 		var tdImg = L.DomUtil.create(tagTd, 'loleaflet-annotation-img', tr);
@@ -354,6 +357,10 @@ L.Annotation = L.Layer.extend({
 		style.whiteSpace = '';
 	},
 
+	_updateResolvedField: function(state) {
+		$(this._resolved).text(state=='true' ? 'Resolved' : '');
+	},
+
 	_updateContent: function () {
 		// .text() method will escape the string, does not interpret the string as HTML
 		$(this._contentText).text(this._data.text);
@@ -367,7 +374,8 @@ L.Annotation = L.Layer.extend({
 		this._contentText.origText = this._data.text;
 		$(this._nodeModifyText).text(this._data.text);
 		$(this._contentAuthor).text(this._data.author);
-		$(this._resolved).text(this._data.resolved);
+
+		this._updateResolvedField(this._data.resolved);
 		$(this._authorAvatarImg).attr('src', this._data.avatar);
 		var user = this._map.getViewId(this._data.author);
 		if (user >= 0) {
